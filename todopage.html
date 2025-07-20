@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Smart To-Do App</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(to right, #f8fbff, #e8ecf3);
+      color: #2c3e50;
+    }
+
+    header {
+      padding: 30px 20px;
+      text-align: center;
+      background-color: #6c63ff;
+      color: white;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 2.5rem;
+    }
+
+    header p {
+      margin: 5px 0 0;
+      font-style: italic;
+      font-size: 1.1rem;
+    }
+
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      padding: 30px;
+      gap: 30px;
+    }
+
+    .input-panel {
+      flex: 1 1 300px;
+      background-color: #ffffff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    }
+
+    .input-panel h2 {
+      font-size: 1.5rem;
+      margin-bottom: 15px;
+    }
+
+    .input-panel input {
+      width: 95%;
+      margin-bottom: 15px;
+      padding: 12px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      font-size: 1rem;
+    }
+
+    .input-panel button {
+      width: 100%;
+      padding: 14px;
+      background-color: #6c63ff;
+      color: white;
+      font-size: 1rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .input-panel button:hover {
+      background-color: #5149d4;
+    }
+
+    .task-panel {
+      flex: 2 1 500px;
+    }
+
+    .category {
+      margin-bottom: 35px;
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+
+    .category h3 {
+      font-size: 1.4rem;
+      color: #394867;
+      border-left: 5px solid #6c63ff;
+      padding-left: 10px;
+      margin-bottom: 15px;
+    }
+
+    .task {
+      background-color: #f4f6fa;
+      margin: 10px;
+      padding: 14px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .task span {
+      flex-grow: 1;
+      font-size: 1rem;
+    }
+
+    .completed {
+      text-decoration: line-through;
+      color: gray;
+    }
+
+    .meta {
+      font-size: 0.8rem;
+      color: #888;
+      margin-right: auto;
+    }
+
+    .task button {
+      margin-left: 8px;
+      padding: 5px 10px;
+      font-size: 0.85rem;
+      background: #6c63ff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .task button:hover {
+      background-color: #5149d4;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>✨To-Do List✨</h1>
+    <p>"Constant Effort is a complete victory"</p>
+  </header>
+
+  <div class="container">
+    <div class="input-panel">
+      <h2>Add a New Task</h2>
+      <input type="text" id="taskInput" placeholder="Enter your task..." />
+      <input type="text" id="categoryInput" placeholder="Enter category (e.g., Personal, Work)" />
+      <button onclick="addTask()">Add Task</button>
+    </div>
+
+    <div class="task-panel" id="taskContainer"></div>
+  </div>
+
+  <script>
+    let tasks = {};
+
+    function formatDate() {
+      const now = new Date();
+      return now.toLocaleString();
+    }
+
+    function renderTasks() {
+      const container = document.getElementById('taskContainer');
+      container.innerHTML = '';
+
+      Object.keys(tasks).forEach(category => {
+        const catDiv = document.createElement('div');
+        catDiv.className = 'category';
+
+        const heading = document.createElement('h3');
+        heading.textContent = category;
+        catDiv.appendChild(heading);
+
+        tasks[category].forEach((task, index) => {
+          const taskDiv = document.createElement('div');
+          taskDiv.className = 'task';
+
+          const taskText = document.createElement('span');
+          taskText.textContent = task.text;
+          if (task.completed) taskText.classList.add('completed');
+
+          const meta = document.createElement('div');
+          meta.className = 'meta';
+          meta.textContent = task.completed
+            ? `Completed: ${task.completedAt}`
+            : `Added: ${task.createdAt}`;
+
+          const completeBtn = document.createElement('button');
+          completeBtn.textContent = task.completed ? 'Undo' : 'Complete';
+          completeBtn.onclick = () => toggleComplete(category, index);
+
+          const editBtn = document.createElement('button');
+          editBtn.textContent = 'Edit';
+          editBtn.onclick = () => editTask(category, index);
+
+          const deleteBtn = document.createElement('button');
+          deleteBtn.textContent = 'Delete';
+          deleteBtn.onclick = () => deleteTask(category, index);
+
+          taskDiv.appendChild(taskText);
+          taskDiv.appendChild(meta);
+          taskDiv.appendChild(completeBtn);
+          taskDiv.appendChild(editBtn);
+          taskDiv.appendChild(deleteBtn);
+
+          catDiv.appendChild(taskDiv);
+        });
+
+        container.appendChild(catDiv);
+      });
+    }
+
+    function addTask() {
+      const taskText = document.getElementById('taskInput').value.trim();
+      const category = document.getElementById('categoryInput').value.trim();
+
+      if (!taskText || !category) return;
+
+      if (!tasks[category]) tasks[category] = [];
+
+      tasks[category].push({
+        text: taskText,
+        completed: false,
+        createdAt: formatDate(),
+        completedAt: ''
+      });
+
+      document.getElementById('taskInput').value = '';
+      document.getElementById('categoryInput').value = '';
+      renderTasks();
+    }
+
+    function toggleComplete(category, index) {
+      const task = tasks[category][index];
+      task.completed = !task.completed;
+      task.completedAt = task.completed ? formatDate() : '';
+      renderTasks();
+    }
+
+    function editTask(category, index) {
+      const newText = prompt('Edit your task:', tasks[category][index].text);
+      if (newText !== null) {
+        tasks[category][index].text = newText.trim();
+        renderTasks();
+      }
+    }
+
+    function deleteTask(category, index) {
+      tasks[category].splice(index, 1);
+      if (tasks[category].length === 0) delete tasks[category];
+      renderTasks();
+    }
+
+    renderTasks();
+  </script>
+</body>
+</html>
